@@ -43,6 +43,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
         private readonly PendingRemovalsManager _pendingRemovalsManager;
         private readonly CurrencySubscriptionDataConfigManager _currencySubscriptionDataConfigManager;
+        private readonly InternalSubscriptionDataConfigManager _internalSubscriptionDataConfigManager;
         private bool _initializedSecurityBenchmark;
         private readonly IDataProvider _dataProvider;
         private bool _anyDoesNotHaveFundamentalDataWarningLogged;
@@ -70,6 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 algorithm.SubscriptionManager,
                 _securityService,
                 dataPermissionManager.GetResolution(Resolution.Minute));
+            _internalSubscriptionDataConfigManager = new InternalSubscriptionDataConfigManager(_algorithm, Resolution.Minute);
         }
 
         /// <summary>
@@ -333,6 +335,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (!request.IsUniverseSubscription)
                     {
                         addedSubscription = true;
+
+                        _internalSubscriptionDataConfigManager.AddedSubscriptionRequest(request);
                     }
                 }
 
@@ -468,6 +472,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         if (_dataManager.RemoveSubscription(subscription.Configuration, universe))
                         {
+                            _internalSubscriptionDataConfigManager.RemovedSubscriptionRequest(subscription);
                             member.IsTradable = false;
                         }
                     }
